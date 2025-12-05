@@ -28,6 +28,9 @@ from pdfminer.layout import LAParams
 from pptx import Presentation
 from pptx.util import Inches, Pt, Cm, Length
 
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+
 # Optional: ReportLab (Excel fallback, TXT->PDF rendering)
 try:
     from reportlab.lib.pagesizes import A4, letter
