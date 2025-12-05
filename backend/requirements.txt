@@ -1,11 +1,17 @@
 Django>=4.2
 djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+whitenoise
+gunicorn
+
 pdfplumber
-pdf2image
 pdf2docx
 pillow
-pytesseract
 pdfminer.six
 openpyxl
 python-pptx
 pandas
+# remove pdf2image and pytesseract if you won't install poppler/tesseract on the host
+pdf2image
+pytesseract
