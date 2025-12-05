@@ -6,19 +6,19 @@ import { useFileUploader } from "@/hooks/useFileUploader";
 
 export default function Page() {
   const { upload, loading, message } = useFileUploader(
-    "http://127.0.0.1:8000/api/excel-to-pdf/",
-    (name) => name.replace(/\.(xls|xlsx)$/i, ".pdf")
+    "http://127.0.0.1:8000/api/pdf-to-docx/",
+    (name) => name.replace(/\.pdf$/i, ".docx")
   );
 
   return (
     <ConverterWrapper
-      title="EXCEL → PDF"
-      description="Convert Excel spreadsheets into clean PDF sheets."
+      title="PDF → DOCX"
+      description="Convert your PDF file into an editable Word document."
       message={message}
     >
       <FileDropzone
         onFileSelect={upload}
-        accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        accept="application/pdf"
         loading={loading}
       />
     </ConverterWrapper>

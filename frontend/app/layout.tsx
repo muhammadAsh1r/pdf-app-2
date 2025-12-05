@@ -1,23 +1,24 @@
-import { Inter } from 'next/font/google';
-import './globals.css';
-import ClientProviders from '@/components/ClientProviders';
-import Navbar from '@/components/layout/Navbar'; // Adjust path as needed
-
-const inter = Inter({ subsets: ['latin'] });
+import "./globals.css";
+import Sidebar from "@/components/Sidebar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata = {
-  title: 'Django Auth App',
-  description: 'Next.js authentication with Django backend',
+  title: "PDF Utility App",
+  description: "All PDF & document converters in one dashboard",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <ClientProviders>
-          <Navbar />
-          <main className="pt-16">{children}</main> {/* pt-16 matches navbar height */}
-        </ClientProviders>
+    <html lang="en" suppressHydrationWarning>
+      <body className="flex">
+        <Sidebar />
+
+        <main className="flex-1 min-h-screen bg-gray-100 dark:bg-gray-800 p-6">
+          <div className="flex justify-end mb-3">
+            <ThemeToggle />
+          </div>
+          {children}
+        </main>
       </body>
     </html>
   );
