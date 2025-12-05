@@ -110,6 +110,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js dev
     "http://127.0.0.1:3000",
+    "https://pdf-app-2-seven.vercel.app",
 ]
 
 
