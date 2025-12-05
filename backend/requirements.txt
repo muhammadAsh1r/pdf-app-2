@@ -1,0 +1,11 @@
+Django>=4.2
+djangorestframework
+pdfplumber
+pdf2image
+pdf2docx
+pillow
+pytesseract
+pdfminer.six
+openpyxl
+python-pptx
+pandas
