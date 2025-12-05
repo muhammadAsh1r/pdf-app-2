@@ -10,27 +10,35 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ---------------------------
+# Environment / secrets
+# ---------------------------
+# Production: set these in Render / PythonAnywhere / environment
+# Local dev: you can leave them unset and defaults below will apply
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# SECRET_KEY: prefer env var in production. Fallback to current (dev) key.
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-mklkho*wz8l_x0qb2&n&*30qwh#9w2381=msj7nxfvn+%kxlr*",
+)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mklkho*wz8l_x0qb2&n&*30qwh#9w2381=msj7nxfvn+%kxlr*'
+# DEBUG: set to "0" or "False" in production. Default True for local development.
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# ALLOWED_HOSTS: set via comma-separated env var. Default includes localhost for dev.
+_allowed = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [h.strip() for h in _allowed if h.strip()]
 
-ALLOWED_HOSTS = []
-
-
+# ---------------------------
 # Application definition
-
+# ---------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,14 +46,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # third-party
     'rest_framework',
     'rest_framework_simplejwt',
     "rest_framework_simplejwt.token_blacklist",
     'corsheaders',
-    'users',
-    'converters'
-]
 
+    # local apps
+    'users',
+    'converters',
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -59,16 +70,28 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": False,         # set True if you want rotation
-    "BLACKLIST_AFTER_ROTATION": True,       # effective only if rotation enabled
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+# ---------------------------
+# Middleware
+# ---------------------------
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    # Security must be first
     'django.middleware.security.SecurityMiddleware',
+
+    # CORS middleware should be as high as possible
+    'corsheaders.middleware.CorsMiddleware',
+
+    # WhiteNoise for static files (after SecurityMiddleware; before CommonMiddleware)
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+
+    # CSRF, auth, messages, clickjacking
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -80,7 +103,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [],  # add template dirs if needed
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -94,10 +117,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
+# ---------------------------
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# ---------------------------
+# Keep default sqlite for local dev. You can set DATABASE_URL for production later.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -105,19 +128,27 @@ DATABASES = {
     }
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+# ---------------------------
+# CORS configuration
+# ---------------------------
+# You can either allow all origins during development, or set CORS_ALLOWED_ORIGINS via env.
+# For production provide a comma-separated list in CORS_ALLOWED_ORIGINS env var.
+if os.environ.get("CORS_ALLOW_ALL", "").lower() in ("1", "true", "yes"):
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    _cors_origins = os.environ.get(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000,https://pdf-app-2-seven.vercel.app",
+    ).split(",")
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins if o.strip()]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Next.js dev
-    "http://127.0.0.1:3000",
-    "https://pdf-app-2-seven.vercel.app",
-]
+# If you need cookies (session auth) across origins:
+CORS_ALLOW_CREDENTIALS = True
 
-
-
+# ---------------------------
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# ---------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -133,25 +164,24 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+# ---------------------------
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
+# ---------------------------
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
+# ---------------------------
+# Static files (WhiteNoise)
+# ---------------------------
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# Use WhiteNoise storage in production for compressed files & cache-friendly naming.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-STATIC_URL = 'static/'
-
+# ---------------------------
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
+# ---------------------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
