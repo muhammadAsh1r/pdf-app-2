@@ -173,7 +173,8 @@ def _run_soffice_convert_for_presentation(input_path: str, output_dir: str, time
         "--outdir",
         output_dir,
         input_path,
-        f"--env:UserInstallation=file://{user_profile_dir}",
+        # ✅ SINGLE dash here:
+        f"-env:UserInstallation=file://{user_profile_dir}",
     ]
 
     env = os.environ.copy()
@@ -197,12 +198,18 @@ def _run_soffice_convert_for_presentation(input_path: str, output_dir: str, time
     except subprocess.CalledProcessError as e:
         stdout = getattr(e, "stdout", "") or ""
         stderr = getattr(e, "stderr", "") or ""
-        logger.error("soffice conversion failed. exit=%s stdout=%s stderr=%s", getattr(e, "returncode", None), stdout, stderr)
-        raise RuntimeError(f"LibreOffice conversion failed (exit {getattr(e, 'returncode', 'unknown')}).\n\nstdout:\n{stdout}\n\nstderr:\n{stderr}")
+        logger.error(
+            "soffice conversion failed. exit=%s stdout=%s stderr=%s",
+            getattr(e, "returncode", None),
+            stdout,
+            stderr,
+        )
+        raise RuntimeError(
+            f"LibreOffice conversion failed (exit {getattr(e, 'returncode', 'unknown')}).\n\nstdout:\n{stdout}\n\nstderr:\n{stderr}"
+        )
     except subprocess.TimeoutExpired:
         logger.error("soffice conversion timed out after %s seconds for %s", timeout, input_path)
         raise RuntimeError(f"LibreOffice conversion timed out after {timeout} seconds.")
-
 
 def _run_soffice_convert_with_output(input_path: str, output_dir: str, timeout: int = 300) -> Tuple[str, str]:
     """Alias kept for compatibility (identical behavior)."""
@@ -797,32 +804,162 @@ def pdf_to_excel_bytes(file_obj) -> bytes:
 # PDF -> DOCX
 # -------------------------
 
-def pdf_to_docx_bytes(file_obj) -> bytes:
-    if not HAS_PDF2DOCX:
-        raise RuntimeError("pdf2docx is required for PDF -> DOCX conversion. Install pdf2docx package.")
+def pdf_to_docx_bytes(file_obj, timeout: int = 300, debug_keep_tmp: bool = False) -> bytes:
+    """
+    Convert a PDF file-like object to DOCX bytes.
 
+    Strategy:
+      1. Try LibreOffice (`soffice --headless --infilter="writer_pdf_import" --convert-to docx`).
+      2. If soffice not available OR fails OR produces no DOCX, fall back to pdf2docx (if installed).
+    Raises RuntimeError on failure.
+    """
     try:
         file_obj.seek(0)
     except Exception:
         pass
 
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp_pdf:
-        tmp_pdf.write(file_obj.read())
-        tmp_pdf.flush()
+    pdf_bytes = file_obj.read()
+    if not pdf_bytes:
+        raise RuntimeError("Empty PDF file.")
 
-        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_docx:
-            tmp_docx_path = tmp_docx.name
+    tmp_dir = tempfile.mkdtemp(prefix="conv_pdf2docx_")
+    in_fd, in_path = tempfile.mkstemp(dir=tmp_dir, suffix=".pdf")
+    os.close(in_fd)
 
-        conv = Converter(tmp_pdf.name)
-        try:
-            conv.convert(tmp_docx_path, start=0, end=None)
-        finally:
-            conv.close()
+    try:
+        # write input PDF to temp path
+        with open(in_path, "wb") as f:
+            f.write(pdf_bytes)
 
-        with open(tmp_docx_path, "rb") as f:
-            data = f.read()
+        # -------------------------
+        # 1) Try LibreOffice first (if available)
+        # -------------------------
+        libreoffice_tried = False
+        libreoffice_succeeded = False
+        out_path = None
 
-    return data
+        if _is_soffice_available():
+            libreoffice_tried = True
+
+            cmd = [
+                "soffice",
+                "--headless",
+                "--nologo",
+                "--nodefault",
+                "--norestore",
+                "--invisible",
+                # IMPORTANT for PDF -> Word:
+                '--infilter=writer_pdf_import',
+                "--convert-to",
+                "docx",          # LibreOffice chooses appropriate export filter
+                "--outdir",
+                tmp_dir,
+                in_path,
+            ]
+            env = os.environ.copy()
+            env["HOME"] = tmp_dir
+
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=timeout,
+                    text=True,
+                    env=env,
+                )
+                logger.debug("soffice stdout (pdf->docx): %s", proc.stdout)
+                logger.debug("soffice stderr (pdf->docx): %s", proc.stderr)
+
+                # if soffice exited 0, try to find the DOCX
+                base = os.path.splitext(os.path.basename(in_path))[0]
+                expected = os.path.join(tmp_dir, base + ".docx")
+                if os.path.exists(expected):
+                    out_path = expected
+                    libreoffice_succeeded = True
+                else:
+                    # maybe LibreOffice named it differently → look for any .docx
+                    candidates = [
+                        os.path.join(tmp_dir, p)
+                        for p in os.listdir(tmp_dir)
+                        if p.lower().endswith(".docx")
+                    ]
+                    if candidates:
+                        out_path = candidates[0]
+                        libreoffice_succeeded = True
+                    else:
+                        # treat as failure so we can fall back to pdf2docx
+                        logger.warning(
+                            "LibreOffice reported success but no DOCX was produced. "
+                            "stdout=%s stderr=%s",
+                            proc.stdout, proc.stderr,
+                        )
+
+            except FileNotFoundError:
+                # should not happen because _is_soffice_available() checked, but be safe
+                logger.warning("LibreOffice 'soffice' not found on PATH during pdf->docx.")
+            except subprocess.TimeoutExpired:
+                raise RuntimeError(f"LibreOffice conversion timed out after {timeout} seconds.")
+            except subprocess.CalledProcessError as e:
+                stderr = getattr(e, "stderr", "") or ""
+                logger.error("LibreOffice pdf->docx failed: %s", stderr)
+                # don't raise yet → we might still fall back to pdf2docx
+
+        # If LibreOffice worked, return its DOCX
+        if libreoffice_succeeded and out_path and os.path.exists(out_path):
+            with open(out_path, "rb") as f:
+                return f.read()
+
+        # -------------------------
+        # 2) Fallback: pdf2docx
+        # -------------------------
+        if HAS_PDF2DOCX:
+            # reuse the same input PDF path (in_path)
+            from pdf2docx import Converter
+
+            out_path = os.path.join(
+                tmp_dir,
+                os.path.splitext(os.path.basename(in_path))[0] + ".docx",
+            )
+
+            conv = Converter(in_path)
+            try:
+                conv.convert(out_path, start=0, end=None)
+            finally:
+                conv.close()
+
+            if not os.path.exists(out_path):
+                raise RuntimeError("pdf2docx conversion did not produce a DOCX.")
+
+            with open(out_path, "rb") as f:
+                return f.read()
+
+        # -------------------------
+        # 3) Nothing available
+        # -------------------------
+        if libreoffice_tried:
+            raise RuntimeError(
+                "LibreOffice tried to convert PDF → DOCX but no DOCX was produced, "
+                "and pdf2docx fallback is not available. "
+                "Install pdf2docx for a secondary backend."
+            )
+        else:
+            raise RuntimeError(
+                "No backend available for PDF → DOCX. "
+                "Install LibreOffice (soffice) or pdf2docx."
+            )
+
+    finally:
+        # cleanup
+        if not debug_keep_tmp:
+            try:
+                if os.path.exists(tmp_dir):
+                    shutil.rmtree(tmp_dir)
+            except Exception:
+                pass
+        else:
+            logger.info("Debug mode: temp dir for pdf->docx kept at %s", tmp_dir)
 
 
 # -------------------------
