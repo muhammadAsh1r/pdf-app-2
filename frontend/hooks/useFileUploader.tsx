@@ -2,19 +2,32 @@
 
 import { useState } from "react";
 
-export function useFileUploader(apiEndpoint: string, renameCallback: (fileName: string) => string) {
+export function useFileUploader(
+  apiEndpoint: string,
+  renameCallback: (fileName: string) => string
+) {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error" | null; text: string | null }>({
+  const [message, setMessage] = useState<{
+    type: "success" | "error" | null;
+    text: string | null;
+  }>({
     type: null,
     text: null,
   });
 
-  const upload = async (file: File) => {
+  // Accepts either a single File or an array of Files
+  const upload = async (fileOrFiles: File | File[]) => {
     setLoading(true);
     setMessage({ type: null, text: null });
 
     const formData = new FormData();
-    formData.append("file", file);
+
+    if (Array.isArray(fileOrFiles)) {
+      // ⬇️ Adjust "files" to whatever your backend expects: e.g. "images"
+      fileOrFiles.forEach((file) => formData.append("files", file));
+    } else {
+      formData.append("file", fileOrFiles);
+    }
 
     try {
       const response = await fetch(apiEndpoint, {
@@ -32,13 +45,23 @@ export function useFileUploader(apiEndpoint: string, renameCallback: (fileName: 
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = renameCallback(file.name);
+
+      if (Array.isArray(fileOrFiles)) {
+        // For multi-file uploads you’re already using () => "images.pdf"
+        a.download = renameCallback("combined");
+      } else {
+        a.download = renameCallback(fileOrFiles.name);
+      }
+
       a.click();
       a.remove();
 
       setMessage({ type: "success", text: "Converted — download started." });
     } catch (err: any) {
-      setMessage({ type: "error", text: err?.message || "Something went wrong." });
+      setMessage({
+        type: "error",
+        text: err?.message || "Something went wrong.",
+      });
     } finally {
       setLoading(false);
     }

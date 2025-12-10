@@ -7,7 +7,10 @@ import { useFileUploader } from "@/hooks/useFileUploader";
 export default function Page() {
   const { upload, loading, message } = useFileUploader(
     // "http://127.0.0.1:8000/api/docx-to-pdf/",
-    "https://pdf-app-2-cizg.onrender.com/api/docx-to-pdf/",
+    // "https://pdf-app-2-cizg.onrender.com/api/docx-to-pdf/",
+    // "http://localhost:8000/api/docx-to-pdf/",
+    // "https://pdf-app-2-docker.onrender.com/api/docx-to-pdf/",
+    "https://pdf-app-2-docker.onrender.com/api/docx-to-pdf/",
     (name) => name.replace(/\.(doc|docx)$/i, ".pdf")
   );
 

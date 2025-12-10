@@ -23,7 +23,10 @@ export default function TxtToPdfPage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/txt-to-pdf/", {
+      const response = await fetch(
+        // "http://127.0.0.1:8000/api/txt-to-pdf/", 
+        "http://localhost:8000/api/txt-to-pdf/",
+      {
         method: "POST",
         body: formData,
       });

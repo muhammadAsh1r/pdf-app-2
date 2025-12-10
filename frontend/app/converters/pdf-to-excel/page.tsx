@@ -6,7 +6,8 @@ import { useFileUploader } from "@/hooks/useFileUploader";
 
 export default function Page() {
   const { upload, loading, message } = useFileUploader(
-    "http://127.0.0.1:8000/api/pdf-to-excel/",
+    // "http://127.0.0.1:8000/api/pdf-to-excel/",
+    "http://localhost:8000/api/pdf-to-excel/",
     (name) => name.replace(/\.pdf$/i, ".xlsx")
   );
 

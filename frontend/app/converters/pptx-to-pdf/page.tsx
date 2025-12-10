@@ -6,7 +6,8 @@ import { useFileUploader } from "@/hooks/useFileUploader";
 
 export default function Page() {
   const { upload, loading, message } = useFileUploader(
-    "http://127.0.0.1:8000/api/pptx-to-pdf/",
+    // "http://127.0.0.1:8000/api/pptx-to-pdf/",
+    "http://localhost:8000/api/pptx-to-pdf/",
     (name) => name.replace(/\.(ppt|pptx)$/i, ".pdf")
   );
 
