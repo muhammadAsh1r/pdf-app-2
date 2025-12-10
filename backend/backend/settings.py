@@ -141,7 +141,8 @@ else:
         "CORS_ALLOWED_ORIGINS",
         "http://localhost:3000,http://127.0.0.1:3000,https://pdf-app-2-seven.vercel.app",
     ).split(",")
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins if o.strip()]
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins if o.strip(), 
+                            "https://pdf-app-2-git-main-ashirs-projects-4082be2a.vercel.app",]
 
 # If you need cookies (session auth) across origins:
 CORS_ALLOW_CREDENTIALS = True
