@@ -4,16 +4,15 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install system dependencies
-# - poppler-utils  → pdf2image
-# - tesseract-ocr  → OCR
-# - libreoffice    → PPT/PPTX → PDF
+# - poppler-utils → required for pdf2image
+# - tesseract-ocr & libtesseract-dev → OCR support
+# - fonts-dejavu → ReportLab and PIL font rendering
 RUN apt-get update && apt-get install -y \
     poppler-utils \
     tesseract-ocr \
     libtesseract-dev \
-    libreoffice \
-    build-essential \
     fonts-dejavu \
+    build-essential \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -21,12 +20,11 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project code
+# Copy project source
 COPY . .
 
-# Environment
+# Disable Python buffering
 ENV PYTHONUNBUFFERED=1
 
-# Django + gunicorn
+# Gunicorn entrypoint
 CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000"]
-

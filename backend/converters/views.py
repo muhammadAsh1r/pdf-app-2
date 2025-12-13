@@ -97,7 +97,6 @@ class ConvertExcelToPdfView(APIView):
     POST /api/excel-to-pdf/
     Form-data:
       - file (xlsx/xls)
-      - backend (optional): "soffice" or "reportlab"
       - page_size (optional): "A4" or "LETTER"
     """
     permission_classes = [AllowAny]
@@ -108,15 +107,21 @@ class ConvertExcelToPdfView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         excel_file = serializer.validated_data["file"]
-        backend = serializer.validated_data.get("backend", "soffice")
         page_size_choice = serializer.validated_data.get("page_size", "A4")
+
         from reportlab.lib.pagesizes import A4, letter
         page_size = A4 if page_size_choice == "A4" else letter
 
         try:
-            pdf_bytes = xlsx_to_pdf_bytes(excel_file, page_size=page_size, backend=backend)
+            # FORCE reportlab backend → LibreOffice removed
+            pdf_bytes = xlsx_to_pdf_bytes(
+                excel_file,
+                page_size=page_size,
+                backend="reportlab"
+            )
         except Exception as e:
-            return Response({"detail": f"Failed to convert Excel to PDF. {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": f"Failed to convert Excel to PDF. {e}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         filename = (excel_file.name.rsplit(".", 1)[0] if excel_file.name else "output") + ".pdf"
         response = HttpResponse(pdf_bytes, content_type="application/pdf")
