@@ -22,8 +22,24 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-_allowed = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-ALLOWED_HOSTS = [h.strip() for h in _allowed if h.strip()]
+# -------------------------------
+# ALLOWED_HOSTS (FIXED)
+# -------------------------------
+# Adds default hosts + Render's dynamic domain if provided
+default_hosts = [
+    "localhost",
+    "127.0.0.1",
+    "pdf-app-2-docker.onrender.com",
+]
+
+env_hosts = os.environ.get("ALLOWED_HOSTS", "")
+if env_hosts:
+    ALLOWED_HOSTS = [h.strip() for h in env_hosts.split(",") if h.strip()]
+else:
+    ALLOWED_HOSTS = default_hosts
+
+# OR universal fallback (safe for APIs)
+# ALLOWED_HOSTS = ["*"]
 
 # -----------------------------------
 # Installed apps
@@ -73,7 +89,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
-    # CORS needs to be early
+    # CORS needs to be before CommonMiddleware
     'corsheaders.middleware.CorsMiddleware',
 
     # WhiteNoise for static files
@@ -111,8 +127,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # -----------------------------------
-# Database
-# (SQLite for dev — change for production)
+# Database (SQLite for dev)
 # -----------------------------------
 DATABASES = {
     'default': {
@@ -122,7 +137,7 @@ DATABASES = {
 }
 
 # -----------------------------------
-# CORS (YOU WANTED ALL ORIGINS)
+# CORS — Allow all origins
 # -----------------------------------
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
