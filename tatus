@@ -1,0 +1,30 @@
+[33mac01a64[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: commit: Redesigned frontend (clean, no secrets)
+[33m3320c7c[m HEAD@{1}: reset: moving to 3320c7c
+[33me56b1fd[m HEAD@{2}: rebase (finish): returning to refs/heads/main
+[33me56b1fd[m HEAD@{3}: rebase (start): checkout dd25cae29207dff67a40526f2fa58d93c5309ac4~1
+[33me56b1fd[m HEAD@{4}: rebase (finish): returning to refs/heads/main
+[33me56b1fd[m HEAD@{5}: rebase (start): checkout dd25cae29207dff67a40526f2fa58d93c5309ac4
+[33me56b1fd[m HEAD@{6}: commit: Redisgned frontend
+[33mdd25cae[m HEAD@{7}: commit: Added Frontend 2
+[33m3320c7c[m HEAD@{8}: commit: Filename Fixed
+[33mb36c474[m HEAD@{9}: commit: Cleaned Soffice
+[33m2124f9d[m HEAD@{10}: commit: Fixed Setting
+[33m44f4341[m HEAD@{11}: commit: Fixed Setting
+[33m587bfd9[m HEAD@{12}: commit: Alled CORS
+[33mcdc0aeb[m HEAD@{13}: commit: Started docker DOCX Test
+[33mf69a7a7[m HEAD@{14}: commit: First docker commit
+[33m0870a6a[m HEAD@{15}: commit: /api
+[33m601eaa6[m HEAD@{16}: commit: /api
+[33m5f7529e[m HEAD@{17}: commit: Commit to latest version
+[33ma5e1f9f[m HEAD@{18}: commit: added render endpoint
+[33m7e422e8[m HEAD@{19}: commit: gunicorn added
+[33m145b1b8[m HEAD@{20}: commit: updated requ
+[33m113baf8[m HEAD@{21}: commit: updated requ
+[33m7e7ca4b[m HEAD@{22}: commit: updated req
+[33ma1b706d[m HEAD@{23}: commit: Allowed Vercel API
+[33m5afa6e7[m HEAD@{24}: commit: Cleaned some files
+[33m5996286[m HEAD@{25}: commit: Cleaned some files
+[33m969df06[m HEAD@{26}: commit: UI Update
+[33m39ed420[m HEAD@{27}: commit: Fix: remove frontend submodule reference
+[33m2f1ba9e[m HEAD@{28}: Branch: renamed refs/heads/master to refs/heads/main
+[33m2f1ba9e[m HEAD@{30}: commit (initial): Initial Commut
