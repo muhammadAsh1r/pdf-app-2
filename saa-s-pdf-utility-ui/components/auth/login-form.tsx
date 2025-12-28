@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +15,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 export function LoginForm() {
   const router = useRouter();
@@ -32,29 +33,28 @@ export function LoginForm() {
     setError("");
 
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/login/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      console.log("Submitting login...");
+      const response = await fetch(`${API_BASE}/api/auth/login/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // 🔐 REQUIRED for cookies
+        body: JSON.stringify(formData),
+      });
+      console.log("Login status:", response.status);
+      const data = await response.json();
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || "Login failed");
+        throw new Error(data.detail || "Login failed");
       }
 
-      const data = await response.json();
-      // Store tokens
-      localStorage.setItem("accessToken", data.access);
-      localStorage.setItem("refreshToken", data.refresh);
+      // Cookies are now set by backend 🍪
+      console.log("Redirecting to dashboard...");
+      fetch("http://localhost:8000/api/auth/me/", {
+        credentials: "include",
+      }).then((r) => r.status);
 
       router.push("/dashboard");
+      router.refresh(); // ensure server components re-fetch /me
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to login");
     } finally {
@@ -82,7 +82,7 @@ export function LoginForm() {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
-              type="text"
+              type="email"
               placeholder="you@example.com"
               value={formData.email}
               onChange={(e) =>

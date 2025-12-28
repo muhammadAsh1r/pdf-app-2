@@ -1,8 +1,21 @@
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
-import { FileText, ImageIcon, FileSpreadsheet, Presentation, FileType, ArrowRightLeft } from "lucide-react"
+// import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import Link from "next/link";
+import {
+  FileText,
+  ImageIcon,
+  FileSpreadsheet,
+  Presentation,
+  FileType,
+  ArrowRightLeft,
+} from "lucide-react";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 
 export default function ToolsPage() {
   const toolCategories = [
@@ -76,54 +89,63 @@ export default function ToolsPage() {
         },
       ],
     },
-  ]
+  ];
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
+    // <DashboardLayout>
       <main className="flex-1">
-        <section className="border-b border-border bg-muted/30 py-12">
-          <div className="container mx-auto px-4">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <ArrowRightLeft className="h-8 w-8 text-primary" />
-              </div>
-              <h1 className="mb-4 text-4xl font-bold">All PDF Tools</h1>
-              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                Convert, edit, and manage your PDFs with our comprehensive suite of tools
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <div className="space-y-12">
-              {toolCategories.map((category, categoryIndex) => (
-                <div key={categoryIndex}>
-                  <h2 className="mb-6 text-2xl font-bold">{category.title}</h2>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {category.tools.map((tool, toolIndex) => (
-                      <Link key={toolIndex} href={tool.href}>
-                        <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
-                          <CardHeader>
-                            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                              <tool.icon className="h-6 w-6" />
-                            </div>
-                            <CardTitle>{tool.title}</CardTitle>
-                            <CardDescription>{tool.description}</CardDescription>
-                          </CardHeader>
-                        </Card>
-                      </Link>
-                    ))}
+        <div className="flex min-h-screen flex-col">
+          {/* <Navbar /> */}
+          <main className="flex-1">
+            <section className="border-b border-border bg-muted/30 py-12">
+              <div className="container mx-auto px-4">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                    <ArrowRightLeft className="h-8 w-8 text-primary" />
                   </div>
+                  <h1 className="mb-4 text-4xl font-bold">All PDF Tools</h1>
+                  <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                    Convert, edit, and manage your PDFs with our comprehensive
+                    suite of tools
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
+              </div>
+            </section>
+
+            <section className="py-12">
+              <div className="container mx-auto px-4">
+                <div className="space-y-12">
+                  {toolCategories.map((category, categoryIndex) => (
+                    <div key={categoryIndex}>
+                      <h2 className="mb-6 text-2xl font-bold">
+                        {category.title}
+                      </h2>
+                      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {category.tools.map((tool, toolIndex) => (
+                          <Link key={toolIndex} href={tool.href}>
+                            <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
+                              <CardHeader>
+                                <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                  <tool.icon className="h-6 w-6" />
+                                </div>
+                                <CardTitle>{tool.title}</CardTitle>
+                                <CardDescription>
+                                  {tool.description}
+                                </CardDescription>
+                              </CardHeader>
+                            </Card>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </main>
+          <Footer />
+        </div>
       </main>
-      <Footer />
-    </div>
-  )
+    // </DashboardLayout>
+  );
 }

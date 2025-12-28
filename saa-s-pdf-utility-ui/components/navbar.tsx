@@ -1,12 +1,22 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { FileText, Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { FileText, Moon, Sun, LogOut, LayoutDashboard } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
+  const { user, loading, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -36,6 +46,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Theme toggle */}
           <Button
             variant="ghost"
             size="icon"
@@ -47,16 +58,43 @@ export function Navbar() {
             <span className="sr-only">Toggle theme</span>
           </Button>
 
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              Login
-            </Button>
-          </Link>
-          <Link href="/register">
-            <Button size="sm">Start Free</Button>
-          </Link>
+          {/* Auth buttons */}
+          {!loading && (
+            isAuthenticated ? (
+              <>
+                <span className="hidden sm:block text-sm font-medium">
+                  {user.first_name || user.email}
+                </span>
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm">Start Free</Button>
+                </Link>
+              </>
+            )
+          )}
         </div>
       </div>
     </header>
-  )
+  );
 }
