@@ -1,6 +1,8 @@
-import { Navbar } from "@/components/navbar"
-import { LoginForm } from "@/components/auth/login-form"
-import Link from "next/link"
+"use client";
+
+import { Navbar } from "@/components/navbar";
+import { LoginForm } from "@/components/auth/login-form";
+import Link from "next/link";
 
 export default function LoginPage() {
   return (
@@ -10,17 +12,24 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <h1 className="mb-2 text-3xl font-bold">Welcome back</h1>
-            <p className="text-muted-foreground">Sign in to your account to continue</p>
+            <p className="text-muted-foreground">
+              Sign in to your account to continue
+            </p>
           </div>
+
           <LoginForm />
+
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link href="/register" className="font-medium text-primary hover:underline">
+            <Link
+              href="/register"
+              className="font-medium text-primary hover:underline"
+            >
               Sign up
             </Link>
           </p>
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -48,15 +48,9 @@ export default function DashboardPage() {
     const fetchDashboard = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/dashboard/`, {
-          credentials: "include", // 🔐 send auth cookies
+          credentials: "include",
           cache: "no-store",
         });
-
-        if (res.status === 401) {
-          // Not authenticated → back to login
-          window.location.href = "/login";
-          return;
-        }
 
         if (!res.ok) {
           throw new Error("Failed to load dashboard");
@@ -168,11 +162,11 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{data.plan}</div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Upgrade for unlimited conversions
+                Manage your subscription and billing
               </p>
-              <Link href="/pricing">
+              <Link href="/billing">
                 <Button size="sm" className="mt-3">
-                  Upgrade to Pro
+                  Manage Billing
                 </Button>
               </Link>
             </CardContent>
@@ -278,11 +272,11 @@ export default function DashboardPage() {
                   Unlock unlimited conversions
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Upgrade to Pro and remove all limits
+                  Upgrade your plan from the billing page
                 </p>
               </div>
-              <Link href="/pricing">
-                <Button>View Plans</Button>
+              <Link href="/billing">
+                <Button>Manage Billing</Button>
               </Link>
             </CardContent>
           </Card>

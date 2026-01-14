@@ -1,30 +1,65 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+import { usePathname } from "next/navigation";
+import { apiFetch } from "@/lib/api"; // <-- IMPORTANT
 
 export function useAuth() {
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/auth/me/`, {
-      credentials: "include", // 🔐 send cookies to Django
-    })
-      .then(async (res) => {
+    // 🚫 don't check auth on login/register pages
+    if (pathname === "/login" || pathname === "/register") {
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
+
+    async function loadUser() {
+      try {
+        let res = await apiFetch("/api/auth/me/", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        // 🔁 Access expired → try refresh
         if (res.status === 401) {
-          // not logged in is a normal case
-          setUser(null);
-          return;
+          const refreshRes = await apiFetch("/api/auth/refresh/", {
+            method: "POST",
+            cache: "no-store",
+          });
+
+          if (!refreshRes.ok) {
+            throw new Error("Refresh failed");
+          }
+
+          // 🔁 Retry /me after refresh
+          res = await apiFetch("/api/auth/me/", {
+            method: "GET",
+            cache: "no-store",
+          });
         }
-        if (!res.ok) throw new Error("Failed to fetch user");
+
+        if (!res.ok) throw new Error("Not authenticated");
+
         const data = await res.json();
-        setUser(data);
-      })
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
+        if (mounted) setUser(data);
+      } catch {
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadUser();
+
+    return () => {
+      mounted = false;
+    };
+  }, [pathname]);
 
   return { user, loading, isAuthenticated: !!user };
 }

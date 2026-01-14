@@ -56,7 +56,7 @@ export default function BillingPage() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Link href="/pricing">
+                <Link href="/billing/upgrade">
                   <Button variant="outline">Change Plan</Button>
                 </Link>
                 <Button variant="destructive">Cancel Subscription</Button>

@@ -1,32 +1,45 @@
-import { apiFetch } from "./api";
+"use client";
 
-export async function login(email: string, password: string) {
-  const res = await apiFetch("/api/auth/login/", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Login failed");
-  }
+export function useAuth() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // backend sets cookies; nothing to return
-  return true;
-}
+  useEffect(() => {
+    let mounted = true;
 
-export async function getMe() {
-  const res = await apiFetch("/api/auth/me/", {
-    method: "GET",
-    cache: "no-store",
-  });
+    async function loadUser() {
+      try {
+        const res = await apiFetch("/api/auth/me/", {
+          method: "GET",
+          cache: "no-store",
+        });
 
-  if (!res.ok) return null;
-  return res.json();
-}
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted) setUser(data);
+        } else {
+          if (mounted) setUser(null);
+        }
+      } catch {
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
 
-export async function logout() {
-  await apiFetch("/api/auth/logout/", {
-    method: "POST",
-  });
+    loadUser();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return {
+    user,
+    loading,
+    isAuthenticated: !!user,
+  };
 }

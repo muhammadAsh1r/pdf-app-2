@@ -1,7 +1,7 @@
 "use client";
 
-import type React from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,51 +14,49 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 export function LoginForm() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setError("");
 
     try {
-      console.log("Submitting login...");
-      const response = await fetch(`${API_BASE}/api/auth/login/`, {
+      const res = await fetch(`${API_BASE}/api/auth/login/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // 🔐 REQUIRED for cookies
-        body: JSON.stringify(formData),
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
-      console.log("Login status:", response.status);
-      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.detail || "Invalid email or password");
       }
 
-      // Cookies are now set by backend 🍪
-      console.log("Redirecting to dashboard...");
-      fetch("http://localhost:8000/api/auth/me/", {
-        credentials: "include",
-      }).then((r) => r.status);
-
-      router.push("/dashboard");
-      router.refresh(); // ensure server components re-fetch /me
+      router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to login");
+      const message = err instanceof Error ? err.message : "Login failed";
+
+      if (message.toLowerCase().includes("verified")) {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
+      setError(message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -70,6 +68,7 @@ export function LoginForm() {
           Enter your credentials to access your account
         </CardDescription>
       </CardHeader>
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -83,41 +82,27 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={isLoading}
+              disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <a
-                href="/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </a>
-            </div>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={isLoading}
+              disabled={loading}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button className="w-full" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign In
           </Button>
         </form>

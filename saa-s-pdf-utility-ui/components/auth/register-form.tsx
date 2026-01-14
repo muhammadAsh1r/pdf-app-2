@@ -1,74 +1,84 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function RegisterForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     username: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
     }
 
     if (!formData.agreeToTerms) {
-      setError("You must agree to the terms and conditions")
-      setIsLoading(false)
-      return
+      setError("You must agree to the terms and conditions");
+      setIsLoading(false);
+      return;
     }
 
     try {
       // TODO: Replace with actual API call
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register/`, {
+      const response = await fetch(`${API_BASE}/api/auth/register/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // not required for register, but fine if backend sets cookies later
         body: JSON.stringify({
           email: formData.email,
           username: formData.username,
           password: formData.password,
+          password2: formData.confirmPassword, // 👈 REQUIRED
         }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || "Registration failed")
+        const data = await response.json();
+        throw new Error(data.message || "Registration failed");
       }
 
       // Auto-login after registration
-      router.push("/login?registered=true")
+      // router.push("/login?registered=true");
+      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to register")
+      setError(err instanceof Error ? err.message : "Failed to register");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -91,7 +101,9 @@ export function RegisterForm() {
               type="email"
               placeholder="you@example.com"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               required
               disabled={isLoading}
             />
@@ -104,7 +116,9 @@ export function RegisterForm() {
               type="text"
               placeholder="johndoe"
               value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
               required
               disabled={isLoading}
             />
@@ -117,12 +131,16 @@ export function RegisterForm() {
               type="password"
               placeholder="••••••••"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
               required
               minLength={8}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
+            <p className="text-xs text-muted-foreground">
+              Must be at least 8 characters
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -132,7 +150,9 @@ export function RegisterForm() {
               type="password"
               placeholder="••••••••"
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, confirmPassword: e.target.value })
+              }
               required
               disabled={isLoading}
             />
@@ -142,7 +162,9 @@ export function RegisterForm() {
             <Checkbox
               id="terms"
               checked={formData.agreeToTerms}
-              onCheckedChange={(checked) => setFormData({ ...formData, agreeToTerms: checked as boolean })}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, agreeToTerms: checked as boolean })
+              }
               disabled={isLoading}
             />
             <label
@@ -167,5 +189,5 @@ export function RegisterForm() {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
